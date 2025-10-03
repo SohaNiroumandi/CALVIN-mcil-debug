@@ -1,0 +1,93 @@
+perceptual_encoder:
+  vision_static:
+    _target_: calvin_agent.models.perceptual_encoders.vision_network.VisionNetwork
+    input_width: 200
+    input_height: 200
+    activation_function: ReLU
+    dropout_vis_fc: 0.0
+    l2_normalize_output: false
+    visual_features: 64
+    num_c: 3
+  vision_gripper: {}
+  depth_static: {}
+  depth_gripper: {}
+  proprio:
+    _target_: calvin_agent.models.perceptual_encoders.proprio_encoder.IdentityEncoder
+    proprioception_dims:
+      n_state_obs: 8
+      keep_indices:
+      - - 0
+        - 7
+      - - 14
+        - 15
+      robot_orientation_idx:
+      - 3
+      - 6
+      normalize: true
+      normalize_robot_orientation: true
+  tactile: {}
+  _target_: calvin_agent.models.perceptual_encoders.concat_encoders.ConcatEncoders
+  _recursive_: false
+plan_proposal:
+  _target_: calvin_agent.models.plan_encoders.plan_proposal_net.PlanProposalNetwork
+  perceptual_features: 72
+  latent_goal_features: 32
+  plan_features: 256
+  activation_function: ReLU
+  min_std: 0.0001
+plan_recognition:
+  _target_: calvin_agent.models.plan_encoders.plan_recognition_net.PlanRecognitionNetwork
+  in_features: 72
+  plan_features: 256
+  action_space: 7
+  birnn_dropout_p: 0.0
+  min_std: 0.0001
+visual_goal:
+  _target_: calvin_agent.models.encoders.goal_encoders.VisualGoalEncoder
+  in_features: 72
+  hidden_size: 2048
+  latent_goal_features: 32
+  l2_normalize_goal_embeddings: false
+  activation_function: ReLU
+language_goal:
+  _target_: calvin_agent.models.encoders.goal_encoders.LanguageGoalEncoder
+  language_features: 384
+  hidden_size: 2048
+  latent_goal_features: 32
+  word_dropout_p: 0.0
+  l2_normalize_goal_embeddings: false
+  activation_function: ReLU
+action_decoder:
+  _target_: calvin_agent.models.decoders.logistic_policy_network.LogisticPolicyNetwork
+  n_mixtures: 10
+  hidden_size: 2048
+  out_features: 7
+  log_scale_min: -7.0
+  act_max_bound:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  act_min_bound:
+  - -1.0
+  - -1.0
+  - -1.0
+  - -1.0
+  - -1.0
+  - -1.0
+  - -1
+  dataset_dir: ./dataset/debug
+  policy_rnn_dropout_p: 0.0
+  load_action_bounds: true
+  num_classes: 256
+  perceptual_features: 72
+  latent_goal_features: 32
+  plan_features: 256
+kl_beta: 0.001
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.0001
+replan_freq: 30
